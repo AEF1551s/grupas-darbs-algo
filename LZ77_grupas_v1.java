@@ -9,37 +9,54 @@ import java.io.FileOutputStream;
 import java.io.EOFException;
 
 class LZ77_triple {
-	 byte back;
-	byte length;
+	int back;
+	int length;
 	char next;
 
-	LZ77_triple(byte b, byte l, char n) {
+	LZ77_triple(int b, int l, char n) {
 		back = b;
 		length = l;
 		next = n;
 	}
-	public byte getback() {
+
+	public int getback() {
 		return back;
 	}
-	public byte getlength() {
+
+	public int getlength() {
 		return length;
 	}
-	public int getnext() {
+
+	public char getnext() {
 		return next;
 	}
+
 	public void print() {
 		System.out.print("(" + back + ";" + length + ";" + next + ")");
 	}
+
 	public void cprint() {
-		System.out.print(back +" "+length +" "+(int)next+" " );
+		System.out.print(back + " " + length + " " + (int) next + " ");
 	}
 }
 
 class LZ77 {
-	int bufferlength = 6;
+	static final int bufferlength = 100000;
 	private ArrayList<LZ77_triple> triplelist = new ArrayList<>();
+	private ArrayList<LZ77_triple> decrypttriple = new ArrayList<>();
 	private ArrayList<Character> purechar = new ArrayList<>();
 	private ArrayList<Character> decryptchar = new ArrayList<>();
+
+	public void LZ77_encrypt(String entryfilename, String exitfilename) {
+		readFile(entryfilename);
+		encode();
+		encryptFile(exitfilename);
+	}
+	public void LZ77_decrypt(String entryfilename, String exitfilename) {
+		readEncrypted(entryfilename);
+		decode();
+		decodedFile(exitfilename);
+	}
 
 	public void readFile(String filename) {
 		File file = new File(filename);
@@ -60,7 +77,26 @@ class LZ77 {
 		for (char c : purechar) {
 			System.out.print(c);
 		}
-		System.out.println(purechar.size());
+
+	}
+
+	public void decodedPrint() {
+		for (char c : decryptchar) {
+			System.out.print(c);
+		}
+
+	}
+
+	public void decode() {
+		int reader = 0;
+		for (LZ77_triple t : decrypttriple) {
+			reader = decryptchar.size() - t.getback();
+			for (int i = t.getlength(); i > 0; reader++) {
+				decryptchar.add(decryptchar.get(reader));
+				i--;
+			}
+			decryptchar.add(t.getnext());
+		}
 	}
 
 	public void encode() {
@@ -71,12 +107,12 @@ class LZ77 {
 			int j = i - bufferlength;
 			if (j < 0)
 				j = 0;
-			for (; j < i||(j<purechar.size()&&length>0); j++) {
-				if (i + length+1 < purechar.size() && purechar.get(j) == purechar.get(i + length)) {
+			for (; j < i || (j < purechar.size() && length > 0); j++) {
+				if (i + length + 1 < purechar.size() && purechar.get(j) == purechar.get(i + length)) {
 					length++;
 					if (maxlength <= length) {
 						maxlength = length;
-						pos = j - maxlength+1;
+						pos = j - maxlength + 1;
 					}
 				} else {
 					j = j - length;
@@ -88,11 +124,38 @@ class LZ77 {
 //			System.out.print(i + "  ");
 //			System.out.print(pos + "  ");
 //			System.out.print(maxlength);
-			LZ77_triple temp = new LZ77_triple((byte)(i - pos), (byte)maxlength, purechar.get(i + maxlength));
-			i=i+maxlength;
-			//temp.print();
+			LZ77_triple temp = new LZ77_triple((int) (i - pos), (int) maxlength, purechar.get(i + maxlength));
+			i = i + maxlength;
+			// temp.print();
 			triplelist.add(temp);
 
+		}
+	}
+
+	public void readEncrypted(String filename) {
+		File file = new File(filename);
+
+		try (FileReader fr = new FileReader(file)) {
+			int content, i = 0, tempb = 0, templ = 0;
+			while ((content = (fr.read())) != -1) {
+				// purechar.add((char) content);
+				switch (i % 3) {
+				case 0:
+					tempb = content;
+					break;
+				case 1:
+					templ = content;
+					break;
+				case 2:
+					decrypttriple.add(new LZ77_triple(tempb, templ, (char) content));
+					break;
+				}
+				i++;
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -101,33 +164,61 @@ class LZ77 {
 			t.print();
 		}
 	}
+
+	public void decryptPrint() {
+		for (LZ77_triple t : decrypttriple) {
+			t.print();
+		}
+	}
+
 	public void encryptcompactPrint() {
 		for (LZ77_triple t : triplelist) {
 			t.cprint();
 		}
 	}
-public void create(String filename) {
-		
+
+	public void encryptFile(String filename) {
+
 		try {
 			FileWriter out = new FileWriter(filename);
 
-			for (LZ77_triple t: triplelist) {
-				
+			for (LZ77_triple t : triplelist) {
+
 				try {
 
-					out.write((char)t.getback());
-					out.write((char)t.getlength());
-					out.write((char)t.getnext());
-				}
-				catch (Exception e) {
+					out.write((char) t.getback());
+					out.write((char) t.getlength());
+					out.write((char) t.getnext());
+				} catch (Exception e) {
 					System.out.println("input-output error");
 					break;
 				}
 			}
-			
+
 			out.close();
-		} 
-		catch (Exception ex) {
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+		}
+
+	}
+	public void decodedFile(String filename) {
+
+		try {
+			FileWriter out = new FileWriter(filename);
+
+			for (char c : decryptchar) {
+
+				try {
+					out.write(c);
+					
+				} catch (Exception e) {
+					System.out.println("input-output error");
+					break;
+				}
+			}
+
+			out.close();
+		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
 
@@ -137,16 +228,21 @@ public void create(String filename) {
 public class LZ77_grupas_v1 {
 
 	public static void main(String[] args) {
-
+		
 		LZ77 test = new LZ77();
+		test.LZ77_encrypt("doc.txt", "test.dat");
 
-		test.readFile("doc.txt");
 		test.purePrint();
 		System.out.println();
-		test.encode();
 		test.encryptPrint();
-		test.encryptcompactPrint();
-		test.create("test.dat");
+		
+		test.LZ77_decrypt("test.dat", "doc2.txt");
+		
+		System.out.println();
+		test.decryptPrint();
+		System.out.println();
+		test.decodedPrint();
+	
 
 	}
 }
