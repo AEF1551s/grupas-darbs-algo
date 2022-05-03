@@ -1,14 +1,8 @@
-import java.util.Scanner;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.InputStream;
 import java.util.ArrayList;
-
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
-
-import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -118,7 +112,6 @@ class LZ77 {
 		for (int c : decryptchar) {
 			System.out.print(c);
 		}
-
 	}
 
 	public void decode() {
@@ -151,9 +144,7 @@ class LZ77 {
 				} else {
 					j = j - length;
 					length = 0;
-
 				}
-
 			}
 			// System.out.print(i + " ");
 			// System.out.print(pos + " ");
