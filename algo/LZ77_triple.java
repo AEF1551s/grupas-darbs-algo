@@ -1,6 +1,6 @@
 package algo;
 
-class LZ77_triple { // * - Klase, kas glab datu par enkodētiem simboliem
+class LZ77_triple {
 	int back;
 	int length;
 	byte next;
@@ -22,7 +22,9 @@ class LZ77_triple { // * - Klase, kas glab datu par enkodētiem simboliem
 	public byte getnext() {
 		return next;
 	}
+
 	public void print() {
-		System.out.print(back+";"+length+";"+(char)next+"\t");
+		System.out.print(back + ";" + length + ";" + (char) next + "\t");
 	}
+
 }
